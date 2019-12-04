@@ -1,0 +1,73 @@
+EmuRootStartLinuxShell_CPU="$1"
+
+EmuRootStartShell () {
+	cd $EmuRootStartLinuxShell_RootPath
+#mount --bind /dev $EmuRootStartLinuxShell_RootPath/dev
+	env -i TERM=xterm /usr/sbin/chroot $EmuRootStartLinuxShell_RootPath /bin/bash
+}
+
+if [[ $EmuRootStartLinuxShell_CPU == "arm64" ]]; then
+	echo "Architecture=$EmuRootStartLinuxShell_CPU"
+	EmuRootStartLinuxShell_RootPath="/emuroot/aarch64-linux-gnu"
+	EmuRootStartShell
+	exit
+fi
+
+if [[ $EmuRootStartLinuxShell_CPU == "armhf" ]]; then
+	echo "Architecture=$EmuRootStartLinuxShell_CPU"
+	EmuRootStartLinuxShell_RootPath="/emuroot/arm-linux-gnueabihf"
+	EmuRootStartShell
+	exit
+fi
+
+if [[ $EmuRootStartLinuxShell_CPU == "armel" ]]; then
+	echo "Architecture=$EmuRootStartLinuxShell_CPU"
+	EmuRootStartLinuxShell_RootPath="/emuroot/arm-linux-gnueabi"
+	EmuRootStartShell
+	exit
+fi
+
+if [[ $EmuRootStartLinuxShell_CPU == "mips64el" ]]; then
+	echo "Architecture=$EmuRootStartLinuxShell_CPU"
+	EmuRootStartLinuxShell_RootPath="/emuroot/mips64el-linux-gnuabi64"
+	EmuRootStartShell
+	exit
+fi
+
+if [[ $EmuRootStartLinuxShell_CPU == "mipsel" ]]; then
+	echo "Architecture=$EmuRootStartLinuxShell_CPU"
+	EmuRootStartLinuxShell_RootPath="/emuroot/mipsel-linux-gnu"
+	EmuRootStartShell
+	exit
+fi
+
+if [[ $EmuRootStartLinuxShell_CPU == "mips" ]]; then
+	echo "Architecture=$EmuRootStartLinuxShell_CPU"
+	EmuRootStartLinuxShell_RootPath="/emuroot/mips-linux-gnu"
+	EmuRootStartShell
+	exit
+fi
+
+if [[ $EmuRootStartLinuxShell_CPU == "ppc64el" ]]; then
+	echo "Architecture=$EmuRootStartLinuxShell_CPU"
+	EmuRootStartLinuxShell_RootPath="/emuroot/powerpc64le-linux-gnu"
+	EmuRootStartShell
+	exit
+fi
+
+if [[ $EmuRootStartLinuxShell_CPU == "powerpc" ]]; then
+	echo "Architecture=$EmuRootStartLinuxShell_CPU"
+	EmuRootStartLinuxShell_RootPath="/emuroot/powerpc-linux-gnu"
+	EmuRootStartShell
+	exit
+fi
+
+if [[ $EmuRootStartLinuxShell_CPU == "s390x" ]]; then
+	echo "Architecture=$EmuRootStartLinuxShell_CPU"
+	EmuRootStartLinuxShell_RootPath="/emuroot/s390x-linux-gnu"
+	EmuRootStartShell
+	exit
+fi
+
+echo "EmuRoot Linux ShellStarter"
+echo "Available Architectures: arm64 armhf armel mips64el mipsel mips ppc64el powerpc s390x"

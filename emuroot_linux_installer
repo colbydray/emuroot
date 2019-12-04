@@ -1,0 +1,127 @@
+EmuRootInstaller_CPU="$1"
+
+debian_install () {
+	mkdir /usr/
+	mkdir $EmuRootInstaller_RootPath
+	cd $EmuRootInstaller_RootPath
+	debootstrap --arch=$EmuRootInstaller_CPU --foreign buster $EmuRootInstaller_RootPath http://ftp.debian.org/debian
+	umount /proc/sys/fs/binfmt_misc
+	mount -t binfmt_misc none /proc/sys/fs/binfmt_misc
+	echo -1 > /proc/sys/fs/binfmt_misc/status
+	cp $EmuRootInstaller_EmulatorBinPath usr/bin/
+	cp $EmuRootInstaller_EmulatorBinPath-static usr/bin/
+	echo $EmuRootInstaller_Binfmt > /proc/sys/fs/binfmt_misc/register
+	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot $EmuRootInstaller_RootPath /debootstrap/debootstrap --second-stage
+
+	rm $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb http://deb.debian.org/debian buster main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb-src http://deb.debian.org/debian buster main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb http://deb.debian.org/debian-security/ buster/updates main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb-src http://deb.debian.org/debian-security/ buster/updates main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb http://deb.debian.org/debian buster-updates main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb-src http://deb.debian.org/debian buster-updates main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb http://deb.debian.org/debian buster-backports main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb-src http://deb.debian.org/debian buster-backports main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+
+	env -i TERM=xterm /usr/sbin/chroot $EmuRootInstaller_RootPath /bin/su -l root -c 'apt-get update'
+	env -i TERM=xterm /usr/sbin/chroot $EmuRootInstaller_RootPath /bin/su -l root -c 'apt-get install -y libsm6 libxext6 libfreetype6 libmpg123-0 sudo'
+	umount /proc/sys/fs/binfmt_misc
+}
+
+ubuntu_ppc_install () {
+	mkdir /usr/
+	mkdir $EmuRootInstaller_RootPath
+	cd $EmuRootInstaller_RootPath
+	debootstrap --arch=powerpc --foreign xenial $EmuRootInstaller_RootPath http://ports.ubuntu.com/ubuntu-ports/
+	umount /proc/sys/fs/binfmt_misc
+	mount -t binfmt_misc none /proc/sys/fs/binfmt_misc
+	echo -1 > /proc/sys/fs/binfmt_misc/status
+	cp $EmuRootInstaller_EmulatorBinPath usr/bin/
+	echo $EmuRootInstaller_Binfmt > /proc/sys/fs/binfmt_misc/register
+	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot $EmuRootInstaller_RootPath /debootstrap/debootstrap --second-stage
+	env -i TERM=xterm /usr/sbin/chroot $EmuRootInstaller_RootPath /bin/su -l root -c 'apt-get update'
+}
+
+if [[ $EmuRootInstaller_CPU == "arm64" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/aarch64-linux-gnu"
+	EmuRootInstaller_EmulatorBinPath=/usr/bin/qemu-aarch64
+	EmuRootInstaller_Binfmt=":aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7:\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-aarch64-static:"
+	debian_install
+	exit
+fi
+
+if [[ $EmuRootInstaller_CPU == "armhf" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/arm-linux-gnueabihf"
+	EmuRootInstaller_EmulatorBinPath=/usr/bin/qemu-arm
+	EmuRootInstaller_Binfmt=":arm:M::\x7fELF\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x28\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-arm-static:"
+	debian_install
+	exit
+fi
+
+if [[ $EmuRootInstaller_CPU == "armel" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/arm-linux-gnueabi"
+	EmuRootInstaller_EmulatorBinPath=/usr/bin/qemu-arm
+	EmuRootInstaller_Binfmt=":arm:M::\x7fELF\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x28\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-arm-static:"
+	debian_install
+	exit
+fi
+
+if [[ $EmuRootInstaller_CPU == "mips64el" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/mips64el-linux-gnuabi64"
+	EmuRootInstaller_EmulatorBinPath=/usr/bin/qemu-mips64el
+	EmuRootInstaller_Binfmt=":mips64el:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x08\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-mips64el-static:"
+	debian_install
+	exit
+fi
+
+if [[ $EmuRootInstaller_CPU == "mipsel" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/mipsel-linux-gnu"
+	EmuRootInstaller_EmulatorBinPath=/usr/bin/qemu-mipsel
+	EmuRootInstaller_Binfmt=":mipsel:M::\x7fELF\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x08\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-mipsel-static:"
+	debian_install
+	exit
+fi
+
+if [[ $EmuRootInstaller_CPU == "mips" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/mips-linux-gnu"
+	EmuRootInstaller_EmulatorBinPath=/usr/bin/qemu-mips
+	EmuRootInstaller_Binfmt=":mips:M::\x7fELF\x01\x02\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x08:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-mips-static:"
+	debian_install
+	exit
+fi
+
+if [[ $EmuRootInstaller_CPU == "ppc64el" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/powerpc64le-linux-gnu"
+	EmuRootInstaller_EmulatorBinPath=/usr/bin/qemu-ppc64le
+	EmuRootInstaller_Binfmt=":ppc64le:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x15\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\x00:/usr/bin/qemu-ppc64le-static:"
+	debian_install
+	exit
+fi
+
+if [[ $EmuRootInstaller_CPU == "powerpc" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/powerpc-linux-gnu"
+	EmuRootInstaller_EmulatorBinPath=/usr/bin/qemu-ppc
+	EmuRootInstaller_Binfmt=":ppc:M::\x7fELF\x01\x02\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x14:\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-ppc-static:"
+	ubuntu_ppc_install
+	exit
+fi
+
+if [[ $EmuRootInstaller_CPU == "s390x" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/s390x-linux-gnu"
+	EmuRootInstaller_EmulatorBinPath=/usr/bin/qemu-s390x
+	EmuRootInstaller_Binfmt=":s390x:M::\x7fELF\x02\x02\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x16:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-s390x-static:"
+	debian_install
+	exit
+fi
+
+echo "EmuRoot Linux Installer (installs into '/emuroot/')"
+echo "Available Architectures: arm64 (Debian), armhf (Debian), armel (Debian), mips64el (Debian), mipsel (Debian), mips (Debian), ppc64el (Debian), powerpc (Ubuntu), s390x (Debian)"
