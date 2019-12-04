@@ -2,7 +2,6 @@ EmuRootStartLinuxShell_CPU="$1"
 
 EmuRootStartShell () {
 	cd $EmuRootStartLinuxShell_RootPath
-#mount --bind /dev $EmuRootStartLinuxShell_RootPath/dev
 	env -i TERM=xterm /usr/sbin/chroot $EmuRootStartLinuxShell_RootPath /bin/bash
 }
 
