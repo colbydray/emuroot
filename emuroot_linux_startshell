@@ -68,5 +68,19 @@ if [[ $EmuRootStartLinuxShell_CPU == "s390x" ]]; then
 	exit
 fi
 
+if [[ $EmuRootStartLinuxShell_CPU == "i386" ]]; then
+	echo "Architecture=$EmuRootStartLinuxShell_CPU"
+	EmuRootStartLinuxShell_RootPath="/emuroot/i386-linux-gnu"
+	EmuRootStartShell
+	exit
+fi
+
+if [[ $EmuRootStartLinuxShell_CPU == "amd64" ]]; then
+	echo "Architecture=$EmuRootStartLinuxShell_CPU"
+	EmuRootStartLinuxShell_RootPath="/emuroot/x86_64-linux-gnu"
+	EmuRootStartShell
+	exit
+fi
+
 echo "EmuRoot Linux ShellStarter"
-echo "Available Architectures: arm64 armhf armel mips64el mipsel mips ppc64el powerpc s390x"
+echo "Available Architectures: arm64 armhf armel mips64el mipsel mips ppc64el powerpc s390x amd64 i386"
