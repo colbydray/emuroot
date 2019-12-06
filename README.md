@@ -9,6 +9,10 @@ armhf (Debian)
 
 armel (Debian)
 
+amd64 (Ubuntu)
+
+i386 (Debian)
+
 mips64el (Debian)
 
 mipsel (Debian)
