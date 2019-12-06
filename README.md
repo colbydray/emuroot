@@ -1,5 +1,5 @@
 # emuroot
-Make rootfs (other then x86 or amd64) for qemu usermode
+Make rootfs for qemu usermode
 ---
 
 Architectures: 
