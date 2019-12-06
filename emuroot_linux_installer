@@ -1,7 +1,7 @@
 EmuRootInstaller_CPU="$1"
 
 debian_install () {
-	mkdir /usr/
+	mkdir /emuroot/
 	mkdir $EmuRootInstaller_RootPath
 	cd $EmuRootInstaller_RootPath
 	debootstrap --arch=$EmuRootInstaller_CPU --foreign buster $EmuRootInstaller_RootPath http://ftp.debian.org/debian
@@ -33,6 +33,20 @@ ubuntu_ppc_install () {
 	mkdir $EmuRootInstaller_RootPath
 	cd $EmuRootInstaller_RootPath
 	debootstrap --arch=powerpc --foreign xenial $EmuRootInstaller_RootPath http://ports.ubuntu.com/ubuntu-ports/
+	umount /proc/sys/fs/binfmt_misc
+	mount -t binfmt_misc none /proc/sys/fs/binfmt_misc
+	echo -1 > /proc/sys/fs/binfmt_misc/status
+	cp $EmuRootInstaller_EmulatorBinPath usr/bin/
+	echo $EmuRootInstaller_Binfmt > /proc/sys/fs/binfmt_misc/register
+	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot $EmuRootInstaller_RootPath /debootstrap/debootstrap --second-stage
+	env -i TERM=xterm /usr/sbin/chroot $EmuRootInstaller_RootPath /bin/su -l root -c 'apt-get update'
+}
+
+ubuntu_amd64_install () {
+	mkdir /usr/
+	mkdir $EmuRootInstaller_RootPath
+	cd $EmuRootInstaller_RootPath
+	debootstrap --arch=amd64 --foreign bionic $EmuRootInstaller_RootPath http://archive.ubuntu.com/ubuntu/
 	umount /proc/sys/fs/binfmt_misc
 	mount -t binfmt_misc none /proc/sys/fs/binfmt_misc
 	echo -1 > /proc/sys/fs/binfmt_misc/status
@@ -123,5 +137,22 @@ if [[ $EmuRootInstaller_CPU == "s390x" ]]; then
 	exit
 fi
 
+if [[ $EmuRootInstaller_CPU == "i386" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/i386-linux-gnu"
+	EmuRootInstaller_EmulatorBinPath=/usr/bin/qemu-i386
+	EmuRootInstaller_Binfmt=":i386:M::\x7fELF\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x03\x00:\xff\xff\xff\xff\xff\xfe\xfe\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/local/bin/qemu-i386-static:"
+	debian_install
+	exit
+fi
+
+if [[ $EmuRootInstaller_CPU == "amd64" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/x86_64-linux-gnu"
+	EmuRootInstaller_EmulatorBinPath=/usr/bin/qemu-x86_64
+	EmuRootInstaller_Binfmt=":x86_64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00:\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/local/bin/qemu-x86_64-static:"
+	ubuntu_amd64_install
+	exit
+fi
 echo "EmuRoot Linux Installer (installs into '/emuroot/')"
-echo "Available Architectures: arm64 (Debian), armhf (Debian), armel (Debian), mips64el (Debian), mipsel (Debian), mips (Debian), ppc64el (Debian), powerpc (Ubuntu), s390x (Debian)"
+echo "Available Architectures: arm64 (Debian), armhf (Debian), armel (Debian), mips64el (Debian), mipsel (Debian), mips (Debian), ppc64el (Debian), powerpc (Ubuntu), s390x (Debian), amd64 (Ubuntu), i386 (Debian)"
