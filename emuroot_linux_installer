@@ -43,7 +43,7 @@ ubuntu_ppc_install () {
 }
 
 ubuntu_amd64_install () {
-	mkdir /emuroot//usr/
+	mkdir /emuroot/
 	mkdir $EmuRootInstaller_RootPath
 	cd $EmuRootInstaller_RootPath
 	debootstrap --arch=amd64 --foreign bionic $EmuRootInstaller_RootPath http://archive.ubuntu.com/ubuntu/
