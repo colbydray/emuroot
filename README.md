@@ -25,10 +25,6 @@ powerpc (Ubuntu)
 
 s390x (Debian)
 
----
-WARNING: emuroot_linux_installer messes with binfmt
-
----
 
 installing an emuroot
 
