@@ -1,44 +1,120 @@
-electronpenguinizer_current=$(pwd)
-electronpenguinizer_CPU="$1"
+EmuRootInstaller_CPU="$1"
 
-if [[ $electronpenguinizer_CPU == "--help" ]]; then
-	echo -e "\033[1;34melectron\033[1;37m-\033[1;33mpenguinizer\033[0m: \033[1;37mAvailable Architectures: amd64 i386 armhf arm64 mips64el\033[0m"
+debian_install () {
+	mkdir /emuroot/
+	mkdir $EmuRootInstaller_RootPath
+	cd $EmuRootInstaller_RootPath
+	qemu-debootstrap --arch=$EmuRootInstaller_CPU buster $EmuRootInstaller_RootPath http://ftp.debian.org/debian
+	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot $EmuRootInstaller_RootPath /debootstrap/debootstrap --second-stage
+
+	rm $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb http://deb.debian.org/debian buster main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb-src http://deb.debian.org/debian buster main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb http://deb.debian.org/debian-security/ buster/updates main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb-src http://deb.debian.org/debian-security/ buster/updates main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb http://deb.debian.org/debian buster-updates main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb-src http://deb.debian.org/debian buster-updates main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb http://deb.debian.org/debian buster-backports main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+	echo 'deb-src http://deb.debian.org/debian buster-backports main contrib non-free' >> $EmuRootInstaller_RootPath/etc/apt/sources.list
+
+	env -i TERM=xterm /usr/sbin/chroot $EmuRootInstaller_RootPath /bin/su -l root -c 'apt-get update'
+	env -i TERM=xterm /usr/sbin/chroot $EmuRootInstaller_RootPath /bin/su -l root -c 'apt-get install -y libsm6 libxext6 libfreetype6 libmpg123-0 sudo'
+	umount /proc/sys/fs/binfmt_misc
+}
+
+ubuntu_ppc_install () {
+	mkdir /emuroot/
+	mkdir $EmuRootInstaller_RootPath
+	cd $EmuRootInstaller_RootPath
+	debootstrap --arch=powerpc --foreign xenial $EmuRootInstaller_RootPath http://ports.ubuntu.com/ubuntu-ports/
+	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot $EmuRootInstaller_RootPath /debootstrap/debootstrap --second-stage
+	env -i TERM=xterm /usr/sbin/chroot $EmuRootInstaller_RootPath /bin/su -l root -c 'apt-get update'
+}
+
+ubuntu_amd64_install () {
+	mkdir /emuroot/
+	mkdir $EmuRootInstaller_RootPath
+	cd $EmuRootInstaller_RootPath
+	debootstrap --arch=amd64 --foreign bionic $EmuRootInstaller_RootPath http://archive.ubuntu.com/ubuntu/
+	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot $EmuRootInstaller_RootPath /debootstrap/debootstrap --second-stage
+	env -i TERM=xterm /usr/sbin/chroot $EmuRootInstaller_RootPath /bin/su -l root -c 'apt-get update'
+}
+
+if [[ $EmuRootInstaller_CPU == "arm64" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/aarch64-linux-gnu"
+	debian_install
 	exit
 fi
 
-if [[ $electronpenguinizer_CPU == "" ]]; then
-	echo -e "\033[1;34melectron\033[1;37m-\033[1;33mpenguinizer\033[0m: \033[1;37mPlease Specify Architecture: amd64 i386 armhf arm64 mips64el\033[0m"
+if [[ $EmuRootInstaller_CPU == "armhf" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/arm-linux-gnueabihf"
+	debian_install
 	exit
 fi
 
-echo -e "\033[1;34melectron\033[1;37m-\033[1;33mpenguinizer\033[0m: \033[1;37mfinding required file...\033[0m"
-electronpenguinizer_appasar=$(find . -name "app.asar" | head -1)
-if test -z "$electronpenguinizer_appasar" 
-then
-	echo -e "\033[1;34melectron\033[1;37m-\033[1;33mpenguinizer\033[0m: \033[1;37mno required file found. exiting.\033[0m"
+if [[ $EmuRootInstaller_CPU == "armel" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/arm-linux-gnueabi"
+	debian_install
 	exit
-else
-	echo -e "\033[1;34melectron\033[1;37m-\033[1;33mpenguinizer\033[0m: \033[1;37mrequired file found.\033[0m"
-	mkdir /tmp/electronpenguinizer_source/
-	echo -e "\033[1;34melectron\033[1;37m-\033[1;33mpenguinizer\033[0m: \033[1;37munbuilding app...\033[0m"
-	npx asar extract $electronpenguinizer_appasar /tmp/electronpenguinizer_source/
 fi
 
-echo -e "\033[1;34melectron\033[1;37m-\033[1;33mpenguinizer\033[0m: \033[1;37mrebuilding app for $electronpenguinizer_CPU linux...\033[0m"
-if [[ $electronpenguinizer_CPU == "amd64" ]]; then
-	electron-packager /tmp/electronpenguinizer_source/ unoffically_ported_app --platform=linux --arch=x64 --electron-version=9.1.0
+if [[ $EmuRootInstaller_CPU == "mips64el" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/mips64el-linux-gnuabi64"
+	debian_install
+	exit
 fi
-if [[ $electronpenguinizer_CPU == "i386" ]]; then
-	electron-packager /tmp/electronpenguinizer_source/ unoffically_ported_app --platform=linux --arch=ia32 --electron-version=9.1.0
+
+if [[ $EmuRootInstaller_CPU == "mipsel" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/mipsel-linux-gnu"
+	debian_install
+	exit
 fi
-if [[ $electronpenguinizer_CPU == "armhf" ]]; then
-	electron-packager /tmp/electronpenguinizer_source/ unoffically_ported_app --platform=linux --arch=armv7l --electron-version=9.1.0
+
+if [[ $EmuRootInstaller_CPU == "mips" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/mips-linux-gnu"
+	debian_install
+	exit
 fi
-if [[ $electronpenguinizer_CPU == "arm64" ]]; then
-	electron-packager /tmp/electronpenguinizer_source/ unoffically_ported_app --platform=linux --arch=arm64 --electron-version=9.1.0
+
+if [[ $EmuRootInstaller_CPU == "ppc64el" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/powerpc64le-linux-gnu"
+	debian_install
+	exit
 fi
-if [[ $electronpenguinizer_CPU == "mips64el" ]]; then
-	electron-packager /tmp/electronpenguinizer_source/ unoffically_ported_app --platform=linux --arch=mips64el --electron-version=9.1.0
+
+if [[ $EmuRootInstaller_CPU == "powerpc" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/powerpc-linux-gnu"
+	ubuntu_ppc_install
+	exit
 fi
-rm -rf /tmp/electronpenguinizer_source/
-echo -e "\033[1;34melectron\033[1;37m-\033[1;33mpenguinizer\033[0m: \033[1;37mdone!\033[0m"
+
+if [[ $EmuRootInstaller_CPU == "s390x" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/s390x-linux-gnu"
+	debian_install
+	exit
+fi
+
+if [[ $EmuRootInstaller_CPU == "i386" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/i386-linux-gnu"
+	debian_install
+	exit
+fi
+
+if [[ $EmuRootInstaller_CPU == "amd64" ]]; then
+	echo "Architecture=$EmuRootInstaller_CPU"
+	EmuRootInstaller_RootPath="/emuroot/x86_64-linux-gnu"
+	ubuntu_amd64_install
+	exit
+fi
+echo "EmuRoot Linux Installer (installs into '/emuroot/')"
+echo "Available Architectures: arm64 (Debian), armhf (Debian), armel (Debian), mips64el (Debian), mipsel (Debian), mips (Debian), ppc64el (Debian), powerpc (Ubuntu), s390x (Debian), amd64 (Ubuntu), i386 (Debian)"
