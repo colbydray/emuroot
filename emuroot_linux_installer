@@ -24,7 +24,7 @@ else
 	npx asar extract $electronpenguinizer_appasar /tmp/electronpenguinizer_source/
 fi
 
-echo -e "\033[1;34melectron\033[1;37m-\033[1;33mpenguinizer\033[0m: \033[1;37mrebuilding app for linux...\033[0m"
+echo -e "\033[1;34melectron\033[1;37m-\033[1;33mpenguinizer\033[0m: \033[1;37mrebuilding app for $electronpenguinizer_CPU linux...\033[0m"
 if [[ $electronpenguinizer_CPU == "amd64" ]]; then
 	electron-packager /tmp/electronpenguinizer_source/ unoffically_ported_app --platform=linux --arch=x64 --electron-version=9.1.0
 fi
