@@ -34,7 +34,7 @@ installing an emuroot
 
 ---
 
-installing an emuroot shell
+starting an emuroot shell
 
 ~~~
 ./emuroot_linux_startshell <architecture>
